@@ -56,38 +56,40 @@ export class Awareness extends Observable {
      * @type {Map<number, MetaClientState>}
      */
     this.meta = new Map()
-    this._checkInterval = /** @type {any} */ (setInterval(this.onInterval, math.floor(outdatedTimeout / 10)))
+    this.released = false
+    const timeout = () => {
+      if (this.released) return
+      const now = time.getUnixTime()
+      if (this.getLocalState() !== null && (outdatedTimeout / 2 <= now - /** @type {{lastUpdated:number}} */ (this.meta.get(this.clientID)).lastUpdated)) {
+        // renew local clock
+        this.setLocalState(this.getLocalState())
+      }
+      /**
+       * @type {Array<number>}
+       */
+      const remove = []
+      this.meta.forEach((meta, clientid) => {
+        if (clientid !== this.clientID && outdatedTimeout <= now - meta.lastUpdated && this.states.has(clientid)) {
+          remove.push(clientid)
+        }
+      })
+      if (remove.length > 0) {
+        removeAwarenessStates(this, remove, 'timeout')
+      }
+      setTimeout(timeout, math.floor(outdatedTimeout / 10)))
+    }
+    setTimeout(timeout, math.floor(outdatedTimeout / 10)))
     doc.on('destroy', () => {
       this.destroy()
     })
     this.setLocalState({})
   }
 
-  onInterval () {
-    const now = time.getUnixTime()
-    if (this.getLocalState() !== null && (outdatedTimeout / 2 <= now - /** @type {{lastUpdated:number}} */ (this.meta.get(this.clientID)).lastUpdated)) {
-      // renew local clock
-      this.setLocalState(this.getLocalState())
-    }
-    /**
-     * @type {Array<number>}
-     */
-    const remove = []
-    this.meta.forEach((meta, clientid) => {
-      if (clientid !== this.clientID && outdatedTimeout <= now - meta.lastUpdated && this.states.has(clientid)) {
-        remove.push(clientid)
-      }
-    })
-    if (remove.length > 0) {
-      removeAwarenessStates(this, remove, 'timeout')
-    }
-  }
-
   destroy () {
+    this.released = true
     this.emit('destroy', [this])
     this.setLocalState(null)
     super.destroy()
-    clearInterval(this._checkInterval)
   }
 
   /**
