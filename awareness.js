@@ -76,9 +76,9 @@ export class Awareness extends Observable {
       if (remove.length > 0) {
         removeAwarenessStates(this, remove, 'timeout')
       }
-      setTimeout(timeout, math.floor(outdatedTimeout / 10)))
+      setTimeout(timeout, math.floor(outdatedTimeout / 10))
     }
-    setTimeout(timeout, math.floor(outdatedTimeout / 10)))
+    setTimeout(timeout, math.floor(outdatedTimeout / 10))
     doc.on('destroy', () => {
       this.destroy()
     })
